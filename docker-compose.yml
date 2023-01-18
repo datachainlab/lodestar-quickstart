@@ -1,0 +1,60 @@
+version: '3.9'
+
+services:
+  geth:
+    # https://hub.docker.com/r/ethereum/client-go/
+    image: ethereum/client-go:v1.10.26
+    container_name: sepolia-geth
+    volumes:
+      - ./sepolia-data:/data
+    ports:
+      - "8551:8551" # Authorization Port
+      - "8546:8546" # lodestar access to http://geth:8546
+    #stdin_open: true
+    #tty: true
+    command:
+      - --sepolia
+      - --networkid=11155111
+      - --datadir=/data/geth
+      - --authrpc.jwtsecret=/data/jwtsecret
+      - --http
+      - --http.port=8546 #added
+      - --http.corsdomain="*"
+      - --authrpc.vhosts="*"
+      - --authrpc.addr=0.0.0.0
+      - --authrpc.vhosts="*"
+      - --authrpc.port=8551
+    networks:
+      eth-sepolia:
+
+  lodestar:
+    # https://hub.docker.com/r/chainsafe/lodestar
+    image: "lodestar-localnet:v1.3.0"
+    container_name: sepolia-lodestar
+    volumes:
+      - ./sepolia-data:/data
+    ports:
+      #- "8008:8008" # Metrics port
+      - "9596:9596" # REST API port
+    command:
+      - beacon
+      - --checkpointSyncUrl=https://beaconstate-sepolia.chainsafe.io
+      - --network=sepolia
+      - --dataDir=/data/lodestar
+      - --execution.urls=http://127.0.0.1:8551
+      - --rest.address=0.0.0.0
+      - --rest.namespace='*'
+      - --jwt-secret=/data/jwtsecret
+      - --logFile=/data/lodestar/beacon.log
+      - --logFileLevel=debug
+      - --logFileDailyRotate=5
+    networks:
+      eth-sepolia:
+
+networks:
+  eth-sepolia:
+    name: eth-localnet
+    driver: bridge
+
+
+  
