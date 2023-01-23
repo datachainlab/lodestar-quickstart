@@ -13,19 +13,18 @@ services:
     volumes:
       - ./data/${TARGET_NETWORK}:/data
     ports:
-      - "8551:8551" # Authorization Port
+      #- "8551:8551" # Authorization Port
       - ${GETH_HTTP_PORT:-8545}:${GETH_HTTP_PORT:-8545} # RPC Port
       - 0.0.0.0:30303:30303/tcp
       - 0.0.0.0:30303:30303/udp      
     #stdin_open: true
     #tty: true
     command:
-      - --${TARGET_NETWORK}
-      #- --sepolia
-      #- --networkid=11155111
+      - --${TARGET_NETWORK} # network. e.g. sepolia
+      - --networkid=11155111
       - --datadir=/data/geth
       - --http
-      - --http.api=debug,personal,eth,net,web3,txpool,engine,miner
+      - --http.api=web3,eth,net,admin
       - --http.addr=0.0.0.0
       - --http.port=${GETH_HTTP_PORT:-8545}
       - --http.vhosts=*
@@ -35,8 +34,9 @@ services:
       - --authrpc.vhosts=*
       - --authrpc.jwtsecret=/data/jwtsecret
       - --port=30303
-      - --maxpeers=50
-      - --cache=2048
+      - --maxpeers=100
+      - --cache=4096
+      - --verbosity=4
     networks:
       eth:
     healthcheck:
@@ -52,18 +52,14 @@ services:
     volumes:
       - ./data/${TARGET_NETWORK}:/data
     ports:
-      - "9596:9596" # REST API port
+      - ${BEACON_HTTP_PORT:-9596}:${BEACON_HTTP_PORT:-9596} # REST API port
+      - 0.0.0.0:9000:9000/tcp
+      - 0.0.0.0:9000:9000/udp  
     environment:
       NODE_OPTIONS: --max-old-space-size=4096
     command:
       - beacon
-      # https://eth-clients.github.io/checkpoint-sync-endpoints/
-      - --checkpointSyncUrl=https://beaconstate-${TARGET_NETWORK}.chainsafe.io
-      # only Goerli
-      #- --checkpointSyncUrl=https://goerli.checkpoint-sync.ethdevops.io
-      #- --checkpointSyncUrl=https://prater.checkpoint.sigp.io
-      #- --checkpointSyncUrl=https://prater-checkpoint-sync.stakely.io
-      #- --checkpointSyncUrl=https://goerli.beaconstate.ethstaker.cc/
+      - --checkpointSyncUrl=${CHECKPOINT_SYNC_URL}
       - --network=${TARGET_NETWORK}
       - --dataDir=/data/lodestar
       - --eth1=true
@@ -72,6 +68,7 @@ services:
       - --rest.address=0.0.0.0
       - --rest.namespace='*'
       - --jwt-secret=/data/jwtsecret
+      - --targetPeers=50
       - --logLevel=debug
       - --logFile=/data/lodestar/beacon.log
       - --logFileLevel=debug
