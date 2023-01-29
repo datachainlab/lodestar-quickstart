@@ -69,6 +69,11 @@ clean:
 #------------------------------------------------------------------------------
 # Utils
 #------------------------------------------------------------------------------
+# run after geth stopped
+.PHONY:export-data
+export-data:
+	docker run -v $(CURDIR)/data:/data ethereum/client-go:$(GETH_VERSION) export --datadir=/data/$(TARGET_NETWORK)/geth /data/exported-file
+
 .PHONY:check-health-log
 check-health-log:
 	docker inspect --format "{{json .State.Health }}" geth | jq
