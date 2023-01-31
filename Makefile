@@ -2,7 +2,7 @@ GETH_HTTP_PORT=8546
 BEACON_HTTP_PORT=9596
 
 GETH_VERSION=v1.10.26
-LODESTAR_VERSION=v1.3.0
+LODESTAR_VERSION=v1.4.0
 
 TARGET_NETWORK=sepolia
 #TARGET_NETWORK=goerli
@@ -73,6 +73,10 @@ clean:
 .PHONY:export-data
 export-data:
 	docker run -v $(CURDIR)/data:/data ethereum/client-go:$(GETH_VERSION) export --datadir=/data/$(TARGET_NETWORK)/geth /data/exported-file
+
+.PHONY:import-data
+import-data:
+	docker run -v $(CURDIR)/data:/data ethereum/client-go:$(GETH_VERSION) import --datadir=/data/$(TARGET_NETWORK)/geth /data/exported-file
 
 .PHONY:check-health-log
 check-health-log:
